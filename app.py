@@ -1,33 +1,32 @@
-### Building Url Dynamically 
-####Variable Rules And URL Building
+from flask import Flask,render_template,Response
+import cv2
 
-from flask import Flask,redirect,url_for
-import pandas
 app=Flask(__name__)
+camera=cv2.VideoCapture(0)
+
+def generate_frames():
+    while True:
+            
+        ## read the camera frame
+        success,frame=camera.read()
+        if not success:
+            break
+        else:
+            ret,buffer=cv2.imencode('.jpg',frame)
+            frame=buffer.tobytes()
+
+        yield(b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
 
 @app.route('/')
-def welcome():
-    return 'Welcome to my Youtube Channel'
+def index():
+    return render_template('index.html')
 
-@app.route('/success/<int:score>')
-def success(score):
-    return "<html><body><h1>The Reult is passed</h1></body></html>"
+@app.route('/video')
+def video():
+    return Response(generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
-@app.route('/fail/<int:score>')
-def fail(score):
-    return "The Person has failed and the marks is "+ str(score)
-
-### Result checker
-@app.route('/results/<int:marks>')
-def results(marks):
-    result=""
-    if marks<50:
-        result='fail'
-    else:
-        result='success'
-    return redirect(url_for(result,score=marks))
-
-
-if __name__=='__main__':
+if __name__=="__main__":
     app.run(debug=True)
+
