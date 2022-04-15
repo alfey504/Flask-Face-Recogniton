@@ -5,6 +5,7 @@ import tensorflow as tf
 import numpy as np
 import Scripts.pythonscripts as ps
 import cv2
+import time
 
 app=Flask(__name__)
 
@@ -12,12 +13,6 @@ cam = cv2.VideoCapture(0)
 labels = ['alfred', 'lijo', 'sharu', 'vineeth']
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-prev_label = None
-detected_label_count = {
-    'label': None,
-    'count': None
-}
-  
 org = (50, 50)
 fontScale = 1
 color = (255, 0, 0)
@@ -25,17 +20,24 @@ thickness = 2
     
 model = tf.keras.models.load_model('Models/face_rec.h5')
 
+def genarate_status():
+   while True:
+        return str(labels[0])
+
 def generate_frames():
+    prev_label = None
+    detected_label_count = {
+        'label': None,
+        'count': None
+    }
 
     while True:
-        prev_label = 0
         success, img = cam.read()
         if not success:
             break
         else:
             classifier = cv2.CascadeClassifier('Haarcascades/haarcascade_frontalface_default.xml')
             bboxes = classifier.detectMultiScale(img, 1.1, 7)
-            print('Epic Fail lol')
             for box in bboxes:
                 x, y, w, h = box
                 face = img[y:y + h, x:x + w] 
@@ -50,7 +52,7 @@ def generate_frames():
                         if detected_label_count['label'] == label:
                             if detected_label_count['count'] > 10:
                                 prev_label = label
-                                ps.call_api(label)
+                                print(ps.call_api(label))
                             else:
                                 detected_label_count['count'] += 1
                         else:
@@ -74,7 +76,11 @@ def index():
 
 @app.route('/video')
 def video():
-    return Response(generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/status')
+def status():
+    return Response(genarate_status(), mimetype='type/subtype')
 
 if __name__=="__main__":
     app.run(debug=True)
