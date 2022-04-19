@@ -23,14 +23,19 @@
     <div id="alerts">
       
       <script>
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/status', true);
-        xhr.onreadystatechange = function(e) {
-            var div = document.getElementById('status');
-            console.log(this.responseText)
-            div.innerHTML = this.responseText;
-        };
-        xhr.send();
+
+          var source = new EventSource("{{ url_for('sse.stream') }}");
+          source.addEventListener('publish', function(event) {
+              var data = JSON.parse(event.data);
+              console.log("The server says " + data.message);
+              var div = document.getElementById("status");
+              div.innerHTML = data.message;
+          }, false);
+          source.addEventListener('error', function(event) {
+              console.log("Error"+ event)
+              alert("Failed to connect to event stream. Is Redis running?");
+          }, false);
+
       </script>
 
       <div  id="status" class="alert-box alert alert-success" role="alert">

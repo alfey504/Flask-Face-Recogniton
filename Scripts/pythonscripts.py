@@ -13,4 +13,4 @@ def preprocess_image(img):
     return img
 
 def call_api(label):
-    return("attendance marked for " + str(label))
+    return 1, label
