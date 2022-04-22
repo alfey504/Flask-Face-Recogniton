@@ -52,9 +52,10 @@ def generate_frames(camtype):
                             if detected_label_count['count'] > 10:
                                 prev_label = label
                                 
-                                status_code, label, time, emp_name = ps.call_api(label)
+                                status_code, label, time, emp_name, action = ps.call_api(label, camtype)
                                 if status_code == 1:
-                                    msg = emp_name + " punched in at " + str(time)
+                                    msg = emp_name + " " +  action + " at " + str(time)
+                                    
                                 else:
                                     msg = "There has been a issue while punching you in"
 
@@ -79,9 +80,17 @@ def generate_frames(camtype):
 def index():
     return render_template('index.html')
 
+@app.route('/punchout')
+def indexout():
+    return render_template('indexOut.html')
+
 @app.route('/video')
 def video():
     return Response(generate_frames("punch_in"), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/videoout')
+def videoend():
+    return Response(generate_frames("punch_out"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__=="__main__":
     app.run(debug=True)
