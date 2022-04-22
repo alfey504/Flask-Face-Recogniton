@@ -15,21 +15,17 @@ app.config["REDIS_URL"] = "redis://localhost"
 app.register_blueprint(sse, url_prefix='/stream')
 
 cam = cv2.VideoCapture(0)
-labels = ['Abraham Alfred Babu', 'Lijo George', 'Sharu Roy', 'Vineeth Abraham Shaji']
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 org = (50, 50)
 fontScale = 1
 color = (255, 0, 0)
 thickness = 2
-
-status_signal = {
-    'status_code' : 0,
-    'label': None
-}
 model = tf.keras.models.load_model('Models/face_rec.h5')
 
-def generate_frames():
+def generate_frames(camtype):
+
+    print(camtype)
     prev_label = None
     detected_label_count = {
         'label': None,
@@ -55,11 +51,15 @@ def generate_frames():
                         if detected_label_count['label'] == label:
                             if detected_label_count['count'] > 10:
                                 prev_label = label
-                                status_signal['status_code'], status_signal['label'] = ps.call_api(label)
-                                now = datetime.now()
-                                current_time = now.strftime("%H:%M")
+                                
+                                status_code, label, time, emp_name = ps.call_api(label)
+                                if status_code == 1:
+                                    msg = emp_name + " punched in at " + str(time)
+                                else:
+                                    msg = "There has been a issue while punching you in"
+
                                 with app.app_context():
-                                    sse.publish({"message":  labels[int(status_signal['label'])] + " punched in at " + str(current_time)}, type='publish')
+                                    sse.publish({"message":  msg}, type='publish')
                             else:
                                 detected_label_count['count'] += 1
                         else:
@@ -68,7 +68,7 @@ def generate_frames():
 
                         
                     img = cv2.putText(img, labels[label], org, font, fontScale, color, thickness, cv2.LINE_AA)
-                    cv2.rectangle(img, (x, y), (x + w, y +h), (0,0,255), 1)
+                    cv2.rectangle(img, (x, y), (x + w, y +h), (0,255,0), 1)
 
             ret, buffer=cv2.imencode('.jpg',img)
             frame = buffer.tobytes()
@@ -83,7 +83,7 @@ def index():
 
 @app.route('/video')
 def video():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames("punch_in"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__=="__main__":
     app.run(debug=True)
