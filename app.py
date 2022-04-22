@@ -66,8 +66,6 @@ def generate_frames(camtype):
                             detected_label_count['label'] = label
                             detected_label_count['count'] = 1
 
-                        
-                    img = cv2.putText(img, labels[label], org, font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.rectangle(img, (x, y), (x + w, y +h), (0,255,0), 1)
 
             ret, buffer=cv2.imencode('.jpg',img)
