@@ -9,15 +9,28 @@
   </head>
   <body>
     <div id="navigation">
-      <nav class="navbar navbar-dark bg-dark">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-          <h1 class="navbar-brand mb-0 h1">FaceMark</h1>
+          <a class="navbar-brand" href="#">FaceMark</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="{{ url_for('punchin') }}">Punch In</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active"  href="{{ url_for('punchout') }}">Punch Out</a>
+              </li>
+            </ul>
+          </div>
         </div>
       </nav>
     </div>
 
     <div id="stream">
-      <img class="stream-view" src="{{ url_for('videoend') }}" width="50%"/>
+      <img class="stream-view" src="{{ url_for('videoout') }}" width="50%"/>
     </div>
     
     <div id="alerts">
@@ -30,16 +43,25 @@
               console.log("The server says " + data.message);
               var div = document.getElementById("status");
               div.innerHTML = data.message;
+              if(data.status_code == 1){
+                div.className = "alert-box alert alert-success";
+              }else{
+                div.className = "alert-box alert alert-danger";
+              }
+              setTimeout(function(){
+                div.className = "alert-box alert alert-secondary";
+                div.innerHTML = "Please show your face to the camera to punch out";
+              }, 10000);
+
           }, false);
           source.addEventListener('error', function(event) {
               console.log("Error"+ event)
-              alert("Failed to connect to event stream. Is Redis running?");
           }, false);
 
       </script>
 
-      <div  id="status" class="alert-box alert alert-success" role="alert">
-        A simple success alert—check it out!
+      <div  id="status" class="alert-box alert alert-secondary" role="alert">
+        Please show your face to the camera to punch out
       </div>  
     </div>
             

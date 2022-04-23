@@ -1,4 +1,4 @@
-from flask import Flask,render_template,Response
+from flask import Flask,render_template,Response, redirect
 from cProfile import label
 import cv2
 import tensorflow as tf
@@ -55,12 +55,11 @@ def generate_frames(camtype):
                                 status_code, label, time, emp_name, action = ps.call_api(label, camtype)
                                 if status_code == 1:
                                     msg = emp_name + " " +  action + " at " + str(time)
-                                    
                                 else:
                                     msg = "There has been a issue while punching you in"
 
                                 with app.app_context():
-                                    sse.publish({"message":  msg}, type='publish')
+                                    sse.publish({"message":  msg, "status_code": status_code }, type='publish')
                             else:
                                 detected_label_count['count'] += 1
                         else:
@@ -75,21 +74,24 @@ def generate_frames(camtype):
         yield(b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-
 @app.route('/')
 def index():
+    return redirect("/punchin")
+
+@app.route('/punchin')
+def punchin():
     return render_template('index.html')
 
 @app.route('/punchout')
-def indexout():
+def punchout():
     return render_template('indexOut.html')
 
-@app.route('/video')
-def video():
+@app.route('/videoin')
+def videoin():
     return Response(generate_frames("punch_in"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/videoout')
-def videoend():
+def videoout():
     return Response(generate_frames("punch_out"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__=="__main__":
